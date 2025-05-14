@@ -1,0 +1,9 @@
+psycopg2
+types-psycopg2
+mypy
+black==25.1.0
+isort
+flake8
+bandit
+python-dotenv
+git+https://github.com/SecurityChecker/db-utils.git
