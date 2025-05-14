@@ -1,0 +1,58 @@
+name: db-postgre-sql
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_username
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Check main run
+        run: |
+          python3 main.py
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432; do sleep 1; done
+      
+      - name: Lint with flake8
+        run: flake8 main.py --max-line-length 120
+
+      - name: Check formatting with black
+        run: black main.py
+
+      - name: Check imports with isort
+        run: isort --check-only main.py
+      
+      - name: Type check with mypy
+        run: mypy main.py
+      
+      - name: Check security issues
+        run: bandit main.py
